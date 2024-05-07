@@ -1,11 +1,100 @@
+<?php
+session_start();
+
+// Função para adicionar uma operação ao histórico
+function adicionarAoHistorico($operacao) {
+    if (!isset($_SESSION['historico'])) {
+        $_SESSION['historico'] = array();
+    }
+    array_push($_SESSION['historico'], $operacao);
+}
+
+// Função para limpar o histórico
+function limparHistorico() {
+    $_SESSION['historico'] = array();
+}
+
+// Função para salvar os valores dos campos em memória
+function salvarValoresEmMemoria($num1, $num2, $operador) {
+    $_SESSION['memoria'] = array('num1' => $num1, 'num2' => $num2, 'operador' => $operador);
+}
+
+// Função para recuperar os valores salvos em memória
+function recuperarValoresDaMemoria() {
+    return $_SESSION['memoria'];
+}
+
+// Função para calcular e retornar o resultado
+function calcular($num1, $num2, $operador) {
+    switch ($operador) {
+        case '+':
+            return $num1 + $num2;
+        case '-':
+            return $num1 - $num2;
+        case '*':
+            return $num1 * $num2;
+        case '/':
+            if ($num2 != 0) {
+                return $num1 / $num2;
+            } else {
+                return "Erro: Divisão por zero!";
+            }
+        case '^':
+            return pow($num1, $num2);
+        case '!':
+            return fatorial($num1);
+        default:
+            return "Erro: Operador inválido!";
+    }
+}
+
+// Função para calcular o fatorial
+function fatorial($n) {
+    $resultado = 1;
+    for ($i = 2; $i <= $n; $i++) {
+        $resultado *= $i;
+    }
+    return $resultado;
+}
+
+// Verifica se a requisição é do tipo POST e realiza as operações
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verifica se é a ação de "Pegar Valor"
+    if (isset($_POST['pegar_valor'])) {
+        $valores = recuperarValoresDaMemoria();
+        $_POST['num1'] = $valores['num1'];
+        $_POST['num2'] = $valores['num2'];
+        $_POST['operador'] = $valores['operador'];
+    }
+    
+    // Verifica se é a ação de "Apagar Histórico"
+    if (isset($_POST['apagar_historico'])) {
+        limparHistorico();
+    }
+    
+    // Obtém os valores dos campos do formulário
+    $num1 = $_POST['num1'];
+    $num2 = $_POST['num2'];
+    $operador = $_POST['operador'];
+    
+    // Calcula o resultado
+    $resultado = calcular($num1, $num2, $operador);
+    
+    // Adiciona a operação ao histórico
+    $operacao = "$num1 $operador $num2 = $resultado";
+    adicionarAoHistorico($operacao);
+    
+    // Salva os valores em memória
+    salvarValoresEmMemoria($num1, $num2, $operador);
+}
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <title>Calculadora PHP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <style>
         .calculadora-fundo {
             background-color: #f0f8ff;
